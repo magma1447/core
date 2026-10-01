@@ -192,3 +192,45 @@ class ForecastSolarSensorEntity(
             state = self.entity_description.state(self.coordinator.data)
 
         return state
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return the state attributes of the sensor."""
+
+        if self.entity_description.key == "energy_production_today":
+            def is_today(pair):
+                key, value = pair
+                return key.date() == datetime.today().date()
+
+            wh_period_today = dict(filter(is_today, self.coordinator.data.wh_period.items()))
+
+            return {
+                #"watts": {
+                #    timestamp.isoformat(): val
+                #    for timestamp, val in self.coordinator.data.watts.items()
+                #},
+                "watt_hours_period": {
+                    #timestamp.isoformat(): val
+                    #for timestamp, val in self.coordinator.data.wh_period.items()
+                    #timestamp.isoformat(): val
+                    #for timestamp, val in dict(filter(lambda item:item[0].date() == datetime.today().date(), self.coordinator.data.wh_period.items()))
+                    timestamp.isoformat(): val
+                    for timestamp, val in wh_period_today.items()
+                }
+            }
+
+        if self.entity_description.key == "energy_production_tomorrow":
+            def is_tomorrow(pair):
+                key, value = pair
+                return key.date() == (datetime.today() + timedelta(days=1)).date()
+
+            wh_period_tomorrow = dict(filter(is_tomorrow, self.coordinator.data.wh_period.items()))
+
+            return {
+                "watt_hours_period": {
+                    timestamp.isoformat(): val
+                    for timestamp, val in wh_period_tomorrow.items()
+                }
+            }
+
+        return None
